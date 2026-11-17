@@ -1,0 +1,24 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: collabspace
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-collabspace_dev}
+      POSTGRES_DB: collabspace
+    ports: ["127.0.0.1:${POSTGRES_PORT:-5432}:5432"]
+    volumes: ["collabspace_pg:/var/lib/postgresql/data"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U collabspace -d collabspace"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    ports: ["127.0.0.1:6379:6379"]
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes: ["collabspace_redis:/data"]
+volumes:
+  collabspace_pg:
+  collabspace_redis:

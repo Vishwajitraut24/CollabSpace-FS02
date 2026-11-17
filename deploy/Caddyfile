@@ -1,0 +1,16 @@
+{$DOMAIN} {
+	encode zstd gzip
+
+	@backend path /api/* /health /socket.io/*
+	handle @backend {
+		reverse_proxy api:4000
+	}
+
+	handle_path /collab/* {
+		reverse_proxy collab:4001
+	}
+
+	handle {
+		reverse_proxy web:3000
+	}
+}
