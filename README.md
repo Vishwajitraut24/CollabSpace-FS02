@@ -137,6 +137,8 @@ The repository includes a single-VPS Docker Compose deployment. PostgreSQL, Redi
 
 This is a single-node deployment baseline, not a live hosted deployment or a high-availability setup. Do not expose the development Compose stack to the internet.
 
+To host the Next.js frontend on Vercel while keeping the API, PostgreSQL, Redis, and Yjs service on a persistent host, follow the **Deploy the frontend to Vercel** section in [docs/DEPLOYMENT.md](./docs/DEPLOYMENT.md).
+
 ## Real-time collaboration notes
 
 The Yjs service verifies a signed JWT and checks that the user can edit the document before joining a room. Document updates are persisted in the local `.collab-data` LevelDB directory; a PostgreSQL snapshot is also stored when the persistence hook flushes a room. Back up both LevelDB and PostgreSQL. Redis pub/sub propagates membership and role changes so active Yjs connections can be revoked. The Socket.IO Redis adapter and shared Yjs persistence are not configured, so do not horizontally scale this setup.

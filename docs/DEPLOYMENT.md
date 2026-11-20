@@ -9,10 +9,28 @@ This deployment targets a single Linux VPS with Docker Compose and a DNS name. C
 - Inbound TCP ports 80 and 443, plus UDP 443 for HTTP/3.
 - A secure backup location for PostgreSQL and Yjs data.
 
+## Deploy the frontend to Vercel
+
+Vercel can host the Next.js frontend, but this repository's Express API and Yjs collaboration service still need a persistent Node.js host with PostgreSQL, Redis, and durable storage for Yjs LevelDB data. The existing production Docker Compose setup below can host those services; Vercel replaces only the web frontend. Although Vercel Functions support WebSockets, moving these current long-running services and their persistence to Functions would require a separate migration.
+
+1. Choose a frontend origin, preferably a custom domain such as `https://app.example.com`. Add it to the Vercel project's domains. For a `*.vercel.app` production domain, deploy once to obtain the URL, then use that exact origin below.
+2. Deploy the backend using the Docker Compose instructions below. Set `DOMAIN` to a backend hostname such as `api.example.com`, and set `WEB_ORIGIN` in `.env.production` to the exact frontend origin (for example, `https://app.example.com`). For multiple fixed frontend origins, separate them with commas. The API uses this setting for both REST and Socket.IO CORS.
+3. In Vercel, import this repository as a project. Set **Root Directory** to `apps/web`, keep the detected Next.js framework and default build/install commands, and use Node.js 22.x. Add these environment variables for Production (and Preview if needed):
+
+   ```text
+   NEXT_PUBLIC_API_URL=https://api.example.com/api
+   NEXT_PUBLIC_COLLAB_URL=wss://api.example.com/collab
+   ```
+
+   Replace `api.example.com` with the backend hostname. These values are embedded into the frontend at build time; do not use localhost URLs. Set the API's `WEB_ORIGIN` to the exact Vercel production origin. Preview deployments have distinct origins, so either configure a stable preview domain and allow it explicitly or expect browser API requests from previews to be blocked by CORS.
+4. Deploy or redeploy the Vercel project after setting the variables. Verify that `https://api.example.com/health` returns an `ok` status, then test sign-up and a saved document's live collaboration from the Vercel URL.
+
+The backend hostname must route `/api` and `/socket.io` to the Express service and `/collab` to the Yjs service, as the included Caddy configuration does. Run database migrations with `npm run db:deploy` as part of the backend deployment before using the app.
+
 ## Configure and launch
 
 1. Copy `deploy/production.env.example` to `.env.production`.
-2. Set `DOMAIN` to the DNS name for the application. Generate independent secrets using `node -p "require('node:crypto').randomBytes(48).toString('hex')"` and use the output for `JWT_SECRET`, `POSTGRES_PASSWORD`, and `REDIS_PASSWORD`.
+2. Set `DOMAIN` to the DNS name for the application and `WEB_ORIGIN` to the frontend's origin (they can be the same for the all-in-one deployment). Generate independent secrets using `node -p "require('node:crypto').randomBytes(48).toString('hex')"` and use the output for `JWT_SECRET`, `POSTGRES_PASSWORD`, and `REDIS_PASSWORD`.
 3. Keep `.env.production` private. Do not commit it or use the development credentials from `.env.example`.
 4. From the repository root, build and launch:
 

@@ -56,7 +56,7 @@ services:
       DATABASE_URL: postgresql://collabspace:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in your production environment file}@postgres:5432/collabspace?schema=public
       JWT_SECRET: ${JWT_SECRET:?Set JWT_SECRET in your production environment file}
       REDIS_URL: redis://:${REDIS_PASSWORD:?Set REDIS_PASSWORD in your production environment file}@redis:6379
-      WEB_ORIGIN: https://${DOMAIN:?Set DOMAIN in your production environment file}
+      WEB_ORIGIN: ${WEB_ORIGIN:-https://${DOMAIN}}
       TRUST_PROXY: "true"
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
     depends_on:
